@@ -4,27 +4,17 @@ use IEEE.std_logic_1164.all; --  libreria IEEE con definizione tipi standard log
 use IEEE.numeric_std.all;
 
 
-entity tb_fmc is
-end	tb_fmc;
+entity TB_BFLY is
+end	TB_BFLY;
 
 ---------------------------------------------
 
-architecture behavioral of tb_fmc is
+architecture behavioral of TB_BFLY is
 	
-	component fmc_top_entity is
+	component BFLY_TOP_ENTITY is
 	port( 
-	-- Segnali MCU - FMC
-	--lsasBus(19 downto 19)	FMC_CLK
-	--lsasBus(23 downto 23)	FMC_NE1
-	--lsasBus(20 downto 20)	FMC_NOE
-	--lsasBus(21 downto 21)	FMC_NWE
-	--lsasBus(22 downto 22) FMC_NWAIT
-	--lsasBus(31 downto 30)	FMC_AD0-1
-	--lsasBus(17 downto 16)	FMC_AD2-3
-	--lsasBus(15 downto 7)	FMC_AD4-12
-	--lsasBus(26 downto 24) FMC_AD13-15
-	
-	lsasBus: inout STD_LOGIC_VECTOR (31 downto 7)
+		A, B : in STD_LOGIC_VECTOR (23 downto 0);
+		SF
 	);
 	end	component;
 	
