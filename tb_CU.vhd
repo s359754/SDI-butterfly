@@ -15,21 +15,23 @@ architecture behavioral of tb_CU is
 	port (	START:	in	STD_LOGIC;
 		SF_2H_1L: in STD_LOGIC;
 		CK:	in	STD_LOGIC;
-		INSTRUCTION_OUT:	out	STD_LOGIC_VECTOR(15 downto 0)
+		INSTRUCTION_OUT:	out	STD_LOGIC_VECTOR(16 downto 0)
 		);
 	end component;
 	
 	constant period : time := 100 ns;
 	
 	SIGNAL TB_CLK, TB_SF_2H_1L, TB_START : STD_LOGIC := '0';
-	SIGNAL TB_INSTRUCTION_OUT: STD_LOGIC_VECTOR(15 downto 0) := (others=>'0');
+	SIGNAL TB_INSTRUCTION_OUT: STD_LOGIC_VECTOR(16 downto 0) := (others=>'0');
 	
 	SIGNAL REG_IN, SUM_REG, AR_SEL, BR_SEL, WR_SEL, MS_DIFFp, AS_SUM_SEL, SD_ROUND_SEL, REG_RND_BR, REG_RND_BI, REG_RND_AR, REG_RND_AI, SHIFT, DONE : STD_LOGIC := '0';
 	SIGNAL MSD_DIFFm : STD_LOGIC_VECTOR (1 downto 0) := "00";	
+	SIGNAL SF_2H_1L_out : STD_LOGIC := '0';
 	
 	begin
 	
 		--Instruction part
+	SF_2H_1L_out <= TB_INSTRUCTION_OUT(16);
 	REG_IN <= TB_INSTRUCTION_OUT(15);
 	SUM_REG <= TB_INSTRUCTION_OUT(14);
 	AR_SEL <= TB_INSTRUCTION_OUT(13);

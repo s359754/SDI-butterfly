@@ -7,7 +7,7 @@ entity BFLY_CU_ROM is
 	generic(
 		in_length: INTEGER:= 3;
 		next_Address_length :INTEGER := 3;
-		out_length: INTEGER:= 21
+		out_length: INTEGER:= 22
 	);
 	port (	A:	in	STD_LOGIC_VECTOR ((in_length-1) downto 0);
 		OUT_EVEN:	out	STD_LOGIC_VECTOR((out_length-1) downto 0);
@@ -23,6 +23,8 @@ architecture behavioral of BFLY_CU_ROM is
 	
 	SIGNAL REG_IN_even, SUM_REG_even, AR_SEL_even, BR_SEL_even, WR_SEL_even, MS_DIFFp_even, AS_SUM_SEL_even, SD_ROUND_SEL_even, REG_RND_BR_even, REG_RND_BI_even, REG_RND_AR_even, REG_RND_AI_even, SHIFT_even, DONE_even : STD_LOGIC := '0';
 	SIGNAL REG_IN_odd, SUM_REG_odd, AR_SEL_odd, BR_SEL_odd, WR_SEL_odd, MS_DIFFp_odd, AS_SUM_SEL_odd, SD_ROUND_SEL_odd, REG_RND_BR_odd, REG_RND_BI_odd, REG_RND_AR_odd, REG_RND_AI_odd, SHIFT_odd, DONE_odd : STD_LOGIC := '0';
+	SIGNAL SF_2H_1L_even, SF_2H_1L_odd : STD_LOGIC := '0';
+	
 	
 	SIGNAL MSD_DIFFm_even, MSD_DIFFm_odd : STD_LOGIC_VECTOR (1 downto 0) := "00";
 	
@@ -33,6 +35,9 @@ architecture behavioral of BFLY_CU_ROM is
 	OUT_EVEN <= out_tmp_even;
 	OUT_ODD <= out_tmp_odd;
 
+
+	--Shift di 1 o 2 bit
+	out_tmp_even(21) <= SF_2H_1L_even;
 
 	--CC validation
 	out_tmp_even(20) <= CC_Validation_even;
@@ -57,6 +62,10 @@ architecture behavioral of BFLY_CU_ROM is
 	--Next address
 	out_tmp_even((next_Address_length) downto 1) <= next_Address_even;
 	out_tmp_even(0) <= '0';
+
+
+	--Shift di 1 o 2 bit
+	out_tmp_odd(21) <= SF_2H_1L_odd;
 
 	--CC validation
 	out_tmp_odd(20) <= CC_Validation_odd;
@@ -87,6 +96,7 @@ architecture behavioral of BFLY_CU_ROM is
 		if A = "000" then					--IDLE / START
 
 			--IDLE
+			SF_2H_1L_even <= '0';
 			CC_Validation_even <= '0';
 			REG_IN_even <= '0';
 			SUM_REG_even <= '0';
@@ -106,6 +116,7 @@ architecture behavioral of BFLY_CU_ROM is
 			next_Address_even <= "000";
 			
 			--START
+			SF_2H_1L_odd <= '0';
 			CC_Validation_odd <= '1';
 			REG_IN_odd <= '1';
 			SUM_REG_odd <= '0';
@@ -128,6 +139,7 @@ architecture behavioral of BFLY_CU_ROM is
 		elsif A = "001" then 					--M1,SH0 / M1,SH1
 			
 			--M1, SH0
+			SF_2H_1L_even <= '0';
 			CC_Validation_even <= '0';
 			REG_IN_even <= '0';
 			SUM_REG_even <= '0';
@@ -147,6 +159,7 @@ architecture behavioral of BFLY_CU_ROM is
 			next_Address_even <= "010";
 			
 			--M1, SH1
+			SF_2H_1L_odd <= '1';
 			CC_Validation_odd <= '0';
 			REG_IN_odd <= '0';
 			SUM_REG_odd <= '0';
@@ -169,6 +182,7 @@ architecture behavioral of BFLY_CU_ROM is
 		elsif A = "010" then 					--M2 / M3
 		
 			--M2
+			SF_2H_1L_even <= '0';
 			CC_Validation_even <= '1';
 			REG_IN_even <= '0';
 			SUM_REG_even <= '0';
@@ -188,6 +202,7 @@ architecture behavioral of BFLY_CU_ROM is
 			next_Address_even <= "010";
 			
 			--M3
+			SF_2H_1L_odd <= '0';
 			CC_Validation_odd <= '0';
 			REG_IN_odd <= '0';
 			SUM_REG_odd <= '0';
@@ -210,6 +225,7 @@ architecture behavioral of BFLY_CU_ROM is
 		elsif A = "011" then 					--M4,S1 / S2
 
 			--M4, S1
+			SF_2H_1L_even <= '0';
 			CC_Validation_even <= '1';
 			REG_IN_even <= '0';
 			SUM_REG_even <= '0';
@@ -229,6 +245,7 @@ architecture behavioral of BFLY_CU_ROM is
 			next_Address_even <= "011";
 			
 			--S2
+			SF_2H_1L_odd <= '0';
 			CC_Validation_odd <= '0';
 			REG_IN_odd <= '0';
 			SUM_REG_odd <= '0';
@@ -251,6 +268,7 @@ architecture behavioral of BFLY_CU_ROM is
 		elsif A = "100" then  					--M5,D1 / M6,S3
 			
 			--M5, D1
+			SF_2H_1L_even <= '0';
 			CC_Validation_even <= '1';
 			REG_IN_even <= '0';
 			SUM_REG_even <= '0';
@@ -270,6 +288,7 @@ architecture behavioral of BFLY_CU_ROM is
 			next_Address_even <= "100";
 			
 			--M6, S3
+			SF_2H_1L_odd <= '0';
 			CC_Validation_odd <= '0';
 			REG_IN_odd <= '0';
 			SUM_REG_odd <= '0';
@@ -292,6 +311,7 @@ architecture behavioral of BFLY_CU_ROM is
 		elsif A = "101" then  					--D2,SH1 / D3,SH2
 			
 			--D2, SH1
+			SF_2H_1L_even <= '0';
 			CC_Validation_even <= '1';
 			REG_IN_even <= '0';
 			SUM_REG_even <= '0';
@@ -311,6 +331,7 @@ architecture behavioral of BFLY_CU_ROM is
 			next_Address_even <= "101";
 			
 			--D3, SH2
+			SF_2H_1L_odd <= '0';
 			CC_Validation_odd <= '0';
 			REG_IN_odd <= '0';
 			SUM_REG_odd <= '0';
@@ -333,6 +354,7 @@ architecture behavioral of BFLY_CU_ROM is
 		elsif A = "110" then  					--SH3 / SH4
 			
 			--SH3
+			SF_2H_1L_even <= '0';
 			CC_Validation_even <= '1';
 			REG_IN_even <= '0';
 			SUM_REG_even <= '0';
@@ -352,6 +374,7 @@ architecture behavioral of BFLY_CU_ROM is
 			next_Address_even <= "110";
 			
 			--SH4
+			SF_2H_1L_odd <= '0';
 			CC_Validation_odd <= '0';
 			REG_IN_odd <= '0';
 			SUM_REG_odd <= '0';
@@ -374,6 +397,7 @@ architecture behavioral of BFLY_CU_ROM is
 		elsif A = "111" then  					--DONE
 			
 			--DONE
+			SF_2H_1L_even <= '0';
 			CC_Validation_even <= '0';
 			REG_IN_even <= '0';
 			SUM_REG_even <= '0';
@@ -393,6 +417,7 @@ architecture behavioral of BFLY_CU_ROM is
 			next_Address_even <= "000";
 			
 			--UNUSED
+			SF_2H_1L_odd <= '0';
 			CC_Validation_odd <= '0';
 			REG_IN_odd <= '0';
 			SUM_REG_odd <= '0';
@@ -412,7 +437,28 @@ architecture behavioral of BFLY_CU_ROM is
 			next_Address_odd <= "000";
 		
 		else 
+		
+			--DONE
+			SF_2H_1L_even <= '0';
+			CC_Validation_even <= '0';
+			REG_IN_even <= '0';
+			SUM_REG_even <= '0';
+			AR_SEL_even <= '0';
+			BR_SEL_even <= '0';
+			WR_SEL_even <= '0';
+			MS_DIFFp_even <= '0';
+			MSD_DIFFm_even <= "00";
+			AS_SUM_SEL_even <= '0';
+			SD_ROUND_SEL_even <= '0';
+			REG_RND_BR_even <= '0';
+			REG_RND_BI_even <= '0';
+			REG_RND_AR_even <= '0';
+			REG_RND_AI_even <= '0';
+			SHIFT_even <= '0';
+			DONE_even <= '0';
+			next_Address_even <= "000";
 			
+			SF_2H_1L_odd <= '0';
 			CC_Validation_odd <= '0';
 			REG_IN_odd <= '0';
 			SUM_REG_odd <= '0';

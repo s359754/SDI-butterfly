@@ -7,8 +7,9 @@ use IEEE.numeric_std.all;
 entity fmc_datapath is
 port( 
 	Br_in, Bi_in, Ar_in, Ai_in, Wr_in, Wi_in : in STD_LOGIC_VECTOR (23 downto 0);
-	Clock : in STD_LOGIC;
-	Br_out, Bi_out, Ar_out, Ai_out : out STD_LOGIC_VECTOR (23 downto 0)
+	Clock, START, SF_2H_1L : in STD_LOGIC;
+	Br_out, Bi_out, Ar_out, Ai_out : out STD_LOGIC_VECTOR (23 downto 0);
+	DONE : out STD_LOGIC
 );
 end	fmc_datapath;
 
@@ -59,6 +60,14 @@ architecture structural of fmc_datapath is
 		CK:	in	STD_LOGIC;
 		Q:	out	STD_LOGIC_VECTOR((bus_length-1) downto 0));
 	end component;
+	
+	--Flip Flop di tipo T con reset sincrono attivo alto
+	component FT is
+	port (	T:	in	STD_LOGIC;
+		R: in STD_LOGIC;	--RESET attivo alto
+		CK:	in	STD_LOGIC;
+		Q:	out	STD_LOGIC);
+	end component;
 
 	--Multiplexer a tre ingressi con due bit di select
 	component MUX_3 is
@@ -80,22 +89,34 @@ architecture structural of fmc_datapath is
 		Q:	out	STD_LOGIC_VECTOR((bus_length-1) downto 0));
 	end component;
 	
-	--Shifter a destra di uno o due bit
-	component BFLY_SHIFTER is
-	port (	A:	in	STD_LOGIC_VECTOR (48 downto 0);
+	--Blocco unico di shift a destra e rom rounding
+	component rounding is
+	port(
+		Clock:	IN	STD_LOGIC; -- Clock
+		rounding_in : IN std_logic_vector(48 downto 0); -- 49 bit da arrotondare
+		rounding_out: OUT std_logic_vector(23 downto 0); -- 24 bit arrotondati
+		shift_signal: IN STD_LOGIC -- segnale per shiftare
+	);
+	end component;
+	
+	--Control Unit
+	component BFLY_CU_DATAPATH is
+	port (	START:	in	STD_LOGIC;
 		SF_2H_1L: in STD_LOGIC;
 		CK:	in	STD_LOGIC;
-		SHIFT_OUT:	out	STD_LOGIC_VECTOR(48 downto 0)
+		INSTRUCTION_OUT:	out	STD_LOGIC_VECTOR(16 downto 0)
 		);
 	end component;
+	
 	
 	--====================================================================================================---
 	--Dichiarazione segnali datapath
 	--====================================================================================================---
 	
-	--Segnali FSM
-	SIGNAL dp_REG_BR_WR, dp_REG_BI_AR, dp_REG_WI, dp_REG_AI, dp_SUM_REG, dp_AR_SEL, dp_BR_SEL, dp_WR_SEL, dp_SM_DIFFp, dp_AS_SUM_SEL, dp_SD_ROUND_SEL, dp_SHIFT, dp_SF_2H_1L : STD_LOGIC := '0';
+	--Segnali uIR
+	SIGNAL dp_SHIFT_SIGNAL, dp_REG_IN, dp_SUM_REG, dp_AR_SEL, dp_BR_SEL, dp_WR_SEL, dp_MS_DIFFp, dp_AS_SUM_SEL, dp_SD_ROUND_SEL, dp_SHIFT, dp_SF_2H_1L, dp_REG_RND_BR, dp_REG_RND_BI, dp_REG_RND_AR, dp_REG_RND_AI, dp_DONE : STD_LOGIC := '0';
 	SIGNAL dp_MSD_DIFFm	: STD_LOGIC_VECTOR (1 downto 0) := (others => '0');
+	SIGNAL dp_INSTRUCTION_OUT : STD_LOGIC_VECTOR (16 downto 0) := (others => '0');
 	
 	--Ingressi al MUX di Br/Bi
 	SIGNAL dp_Br_MUX_in, dp_Bi_MUX_in : STD_LOGIC_VECTOR (23 downto 0) := (others => '0'); 
@@ -106,10 +127,6 @@ architecture structural of fmc_datapath is
 	
 	--Uscite dei MUX di B, A e W
 	SIGNAL dp_B_MUX_out, dp_A_MUX_out, dp_W_MUX_out : STD_LOGIC_VECTOR (23 downto 0) := (others => '0'); 
-	
-	--Ingressi ai registri di pipe di ingresso di Ar e Ai
-	SIGNAL dp_Ar_reg2_in, dp_Ar_reg3_in, dp_Ar_reg4_in : STD_LOGIC_VECTOR (23 downto 0) := (others => '0');
-	SIGNAL dp_Ai_reg2_in, dp_Ai_reg3_in : STD_LOGIC_VECTOR (23 downto 0) := (others => '0');
 	
 	--Uscite e ingressi del multiplier
 	SIGNAL dp_X_MPY_in, dp_Y_MPY_in : STD_LOGIC_VECTOR (23 downto 0) := (others => '0'); 
@@ -124,6 +141,12 @@ architecture structural of fmc_datapath is
 	--Uscita del registro di pipe della somma
 	SIGNAL dp_SUM_reg_out : STD_LOGIC_VECTOR (48 downto 0) := (others => '0');
 	
+	--Uscita del registro di pipe del sottrattore
+	SIGNAL dp_DIFF_reg_out : STD_LOGIC_VECTOR (48 downto 0) := (others => '0');
+	
+	--Uscita del registro di pipe del prodotto e dello shift
+	SIGNAL dp_MPY_M_reg_out, dp_MPY_S_reg_out : STD_LOGIC_VECTOR (48 downto 0) := (others => '0');
+	
 	--Ingresso 1 del multiplexer in entrata al sommatore, ovvero l'uscita del MUX di Ar/Ai con zeri aggiunti
 	SIGNAL dp_AS_A_MUX_in : STD_LOGIC_VECTOR (48 downto 0) := (others => '0');
 	--Uscita del multiplexer in entrata al sommatore
@@ -133,7 +156,7 @@ architecture structural of fmc_datapath is
 	SIGNAL dp_AB_MUX_out : STD_LOGIC_VECTOR (23 downto 0) := (others => '0');
 
 	--Uscita del MUX dell'ingresso positivo del sottrattore
-	SIGNAL dp_SM_MUX_out : STD_LOGIC_VECTOR (48 downto 0) := (others => '0');
+	SIGNAL dp_MS_MUX_out : STD_LOGIC_VECTOR (48 downto 0) := (others => '0');
 	
 	--Uscita del MUX dell'ingresso negativo del sottrattore
 	SIGNAL dp_MSD_MUX_out : STD_LOGIC_VECTOR (48 downto 0) := (others => '0');
@@ -141,10 +164,7 @@ architecture structural of fmc_datapath is
 	--Uscita del MUX dell'ingresso dello shifter a destra
 	SIGNAL dp_SD_MUX_out : STD_LOGIC_VECTOR (48 downto 0) := (others => '0');
 	
-	--Uscita dello Shifter
-	SIGNAL dp_SHIFT_out : STD_LOGIC_VECTOR (48 downto 0) := (others => '0');
-	
-	--Uscita del rom rounding
+	--Uscita del blocco shift + rom rounding
 	SIGNAL dp_ROM_round_out : STD_LOGIC_VECTOR (23 downto 0) := (others => '0');
 	
 	begin
@@ -153,105 +173,49 @@ architecture structural of fmc_datapath is
 	--Port map dei registri a 24 bit
 	--====================================================================================================---
 	
-	pm_reg1_Br : FD
+	pm_regin_Br : FD
 		generic map (
 			bus_length => 24
 		)
 		port map (
 			D => Br_in,
-			E => dp_REG_BR_WR,
+			E => dp_REG_IN,
 			CK => Clock,
 			Q => dp_Br_MUX_in
 	);
 	
-	pm_reg1_Bi : FD
+	pm_regin_Bi : FD
 		generic map (
 			bus_length => 24
 		)
 		port map (
 			D => Bi_in,
-			E => dp_REG_BI_AR,
+			E => dp_REG_IN,
 			CK => Clock,
 			Q => dp_Bi_MUX_in
 	);
 	
-	pm_reg1_Ar : FD
+	pm_regin_Ar : FD
 		generic map (
 			bus_length => 24
 		)
 		port map (
 			D => Ar_in,
-			E => '1',
+			E => dp_REG_IN,
 			CK => Clock,
-			Q => dp_Ar_reg2_in
+			Q => dp_Ar_MUX_in
 	);
 	
-	pm_reg2_Ar : FD
-		generic map (
-			bus_length => 24
-		)
-		port map (
-			D => dp_Ar_reg2_in,
-			E => '1',
-			CK => Clock,
-			Q => dp_Ar_reg3_in
-	);
-	
-	pm_reg3_Ar : FD
-		generic map (
-			bus_length => 24
-		)
-		port map (
-			D => dp_Ar_reg3_in,
-			E => '1',
-			CK => Clock,
-			Q => dp_Ar_reg4_in
-	);
-	
-	pm_reg4_Ar : FD
-		generic map (
-			bus_length => 24
-		)
-		port map (
-			D => dp_Ar_reg3_in,
-			E => dp_REG_BI_AR,
-			CK => Clock,
-			Q => dp_Ar_reg4_in
-	);
-	
-	pm_reg1_Ai : FD
+	pm_regin_Ai : FD
 		generic map (
 			bus_length => 24
 		)
 		port map (
 			D => Ai_in,
-			E => '1',
-			CK => Clock,
-			Q => dp_Ai_reg2_in
-	);
-	
-	pm_reg2_Ai : FD
-		generic map (
-			bus_length => 24
-		)
-		port map (
-			D => dp_Ai_reg2_in,
-			E => '1',
-			CK => Clock,
-			Q => dp_Ai_reg3_in
-	);
-	
-	pm_reg3_Ai : FD
-		generic map (
-			bus_length => 24
-		)
-		port map (
-			D => dp_Ai_reg3_in,
-			E => dp_REG_AI,
+			E => dp_REG_IN,
 			CK => Clock,
 			Q => dp_Ai_MUX_in
 	);
-	
 	
 	--====================================================================================================---
 	--Port map dei Multiplexer a due ingressi
@@ -321,10 +285,10 @@ architecture structural of fmc_datapath is
 		bus_length => 49
 	)
 	port map (
-		A => dp_MPY_shift_out,	--l'uscita SHIFT del moltiplicatore
+		A => dp_MPY_S_reg_out,	--l'uscita SHIFT del moltiplicatore
 		B => dp_SUM_reg_out,	--l'uscita del sommatore rallentata di un colpo di Clock
-		S => dp_SM_DIFFp,
-		Q => dp_SM_MUX_out
+		S => dp_MS_DIFFp,
+		Q => dp_MS_MUX_out
 	);
 	
 	pm_mux_rshift : MUX_2 	--Multiplexer dell'ingresso allo shifter a destra
@@ -332,8 +296,8 @@ architecture structural of fmc_datapath is
 		bus_length => 49
 	)
 	port map (
-		A => dp_SUM_out,		--l'uscita del sommatore
-		B => dp_DIFF_out,	--l'uscita del sottrattore
+		A => dp_SUM_reg_out,		--l'uscita del sommatore
+		B => dp_DIFF_reg_out,	--l'uscita del sottrattore
 		S => dp_SD_ROUND_SEL,
 		Q => dp_SD_MUX_out
 	);
@@ -344,11 +308,11 @@ architecture structural of fmc_datapath is
 		bus_length => 49
 	)
 	port map (
-		A => dp_MPY_product_out,		--l'uscita MPY del moltiplicatore 
+		A => dp_MPY_M_reg_out,			--l'uscita MPY del moltiplicatore rallentata di un colpo di Clock
 		B => dp_SUM_reg_out,			--l'uscita del sommatore rallentata di un colpo di Clock
-		C => dp_DIFF_out,				--l'uscita del sottrattore
+		C => dp_DIFF_reg_out,			--l'uscita del sottrattore rallentata di un colpo di Clock
 		S => dp_MSD_DIFFm,
-		Q => dp_DIFF_out
+		Q => dp_MSD_MUX_out
 	);
 	
 	--====================================================================================================---
@@ -369,7 +333,7 @@ architecture structural of fmc_datapath is
 	);
 	
 	dp_X_SUM_in <= dp_AS_MUX_out;		--L'ingresso 1 dell'adder è connesso all'uscita del multiplexer A/Somma
-	dp_Y_SUM_in <= dp_MPY_product_out;	--L'ingresso 2 dell'adder è connesso all'uscita moltiplicazione del multiplier
+	dp_Y_SUM_in <= dp_MPY_M_reg_out;	--L'ingresso 2 dell'adder è connesso all'uscita moltiplicazione del multiplier
 	
 	pm_Adder : BFLY_ADDER	--Port map dell'adder
 	port map (
@@ -379,7 +343,7 @@ architecture structural of fmc_datapath is
 		SUM_OUT => dp_SUM_out
 	);
 	
-	dp_X_DIFF_in <= dp_SM_MUX_out;
+	dp_X_DIFF_in <= dp_MS_MUX_out;
 	dp_Y_DIFF_in <= dp_MSD_MUX_out;
 	
 	pm_Subractor : BFLY_SUBTRACTOR	--Port map del sottrattore
@@ -389,25 +353,147 @@ architecture structural of fmc_datapath is
 		CK => Clock,
 		DIFF_OUT => dp_DIFF_out
 	);
-	
-	pm_rshift: BFLY_SHIFTER		--Port map dello shifter a destra
+		
+	pm_ft_shift : FT	--Port map del flip flop T che ha come uscita il segnale di SF_2H_1L per il blocco rounding
 	port map (
-		A => dp_SD_MUX_out,		--L'ingresso dello shifter è l'uscita del multiplexer Somma/Differenza
-		SF_2H_1L => dp_SF_2H_1L,
+		T => dp_SHIFT_SIGNAL,	--Segnale che viene dalla CU
+		R => dp_DONE,			--Segnale che viene dalla CU
 		CK => Clock,
-		SHIFT_OUT => dp_SHIFT_out
+		Q => dp_SF_2H_1L
+	);
+		
+	pm_rounding : rounding	--Port map del blocco unico shifter a destra e ROM rounding
+	port map (
+		Clock => Clock,
+		rounding_in => dp_SD_MUX_out,
+		rounding_out => dp_ROM_round_out,
+		shift_signal => dp_SF_2H_1L
 	);
 	
-	--rom rounding
-	--pm_rom_round : 
-	--port map(
-		
-	--);
+	pm_CU : BFLY_CU_DATAPATH	--Port map della Control unit
+	port map (
+		START => START,
+		SF_2H_1L => SF_2H_1L,
+		CK => Clock,
+		INSTRUCTION_OUT => dp_INSTRUCTION_OUT
+	);
 	
-	Br_out <= dp_ROM_round_out;
-	Bi_out <= dp_ROM_round_out;
-	Ar_out <= dp_ROM_round_out;
-	Ai_out <= dp_ROM_round_out;
+	--Segnali della parte di istruzione del uIR della CU
+	dp_SHIFT_SIGNAL <= dp_INSTRUCTION_OUT(16);
+	dp_REG_IN <= dp_INSTRUCTION_OUT(15);
+	dp_SUM_REG <= dp_INSTRUCTION_OUT(14);
+	dp_AR_SEL <= dp_INSTRUCTION_OUT(13);
+	dp_BR_SEL <= dp_INSTRUCTION_OUT(12);
+	dp_WR_SEL <= dp_INSTRUCTION_OUT(11);
+	dp_MS_DIFFp <= dp_INSTRUCTION_OUT(10);
+	dp_MSD_DIFFm <= dp_INSTRUCTION_OUT(9 downto 8);
+	dp_AS_SUM_SEL <= dp_INSTRUCTION_OUT(7);
+	dp_SD_ROUND_SEL <= dp_INSTRUCTION_OUT(6);
+	dp_REG_RND_BR <= dp_INSTRUCTION_OUT(5);
+	dp_REG_RND_BI <= dp_INSTRUCTION_OUT(4);
+	dp_REG_RND_AR <= dp_INSTRUCTION_OUT(3);
+	dp_REG_RND_AI <= dp_INSTRUCTION_OUT(2);
+	dp_SHIFT <= dp_INSTRUCTION_OUT(1);
+	dp_DONE <= dp_INSTRUCTION_OUT(0);
+	
+	DONE <= dp_DONE;
+	
+	
+	--====================================================================================================---
+	--Port map dei registri a 49 bit
+	--====================================================================================================---
+	
+	pm_reg_MPY_product_out : FD	--Port map del registro all'uscita prodotto del multiplier
+		generic map (
+			bus_length => 49
+		)
+		port map (
+			D => dp_MPY_product_out,
+			E => '1',
+			CK => Clock,
+			Q => dp_MPY_M_reg_out
+	);
+	
+	pm_reg_MPY_shift_out : FD	--Port map del registro all'uscita shift del multiplier
+		generic map (
+			bus_length => 49
+		)
+		port map (
+			D => dp_MPY_shift_out,
+			E => '1',
+			CK => Clock,
+			Q => dp_MPY_S_reg_out
+	);
+	
+	pm_reg_SUM_out : FD	--Port map del registro all'uscita del sommatore
+		generic map (
+			bus_length => 49
+		)
+		port map (
+			D => dp_SUM_out,
+			E => '1',
+			CK => Clock,
+			Q => dp_SUM_reg_out
+	);
+	
+	pm_reg_DIFF_out : FD	--Port map del registro all'uscita del sottrattore
+		generic map (
+			bus_length => 49
+		)
+		port map (
+			D => dp_DIFF_out,
+			E => '1',
+			CK => Clock,
+			Q => dp_DIFF_reg_out
+	);
+	
+	--====================================================================================================---
+	--Port map dei registri di uscita a 24 bit
+	--====================================================================================================---
+	
+	pm_regout_Br : FD
+		generic map (
+			bus_length => 24
+		)
+		port map (
+			D => dp_ROM_round_out,
+			E => dp_REG_RND_BR,
+			CK => Clock,
+			Q => Br_out
+	);
+	
+	pm_regout_Bi : FD
+		generic map (
+			bus_length => 24
+		)
+		port map (
+			D => dp_ROM_round_out,
+			E => dp_REG_RND_BI,
+			CK => Clock,
+			Q => Bi_out
+	);
+	
+	pm_regout_Ar : FD
+		generic map (
+			bus_length => 24
+		)
+		port map (
+			D => dp_ROM_round_out,
+			E => dp_REG_RND_AR,
+			CK => Clock,
+			Q => Ar_out
+	);
+	
+	pm_regout_Ai : FD
+		generic map (
+			bus_length => 24
+		)
+		port map (
+			D => dp_ROM_round_out,
+			E => dp_REG_RND_AI,
+			CK => Clock,
+			Q => Ai_out
+	);
 	
 end structural;
  

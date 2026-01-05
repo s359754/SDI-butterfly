@@ -7,7 +7,7 @@ entity BFLY_CU_DATAPATH is
 	port (	START:	in	STD_LOGIC;
 		SF_2H_1L: in STD_LOGIC;
 		CK:	in	STD_LOGIC;
-		INSTRUCTION_OUT:	out	STD_LOGIC_VECTOR(15 downto 0)
+		INSTRUCTION_OUT:	out	STD_LOGIC_VECTOR(16 downto 0)
 		);
 end BFLY_CU_DATAPATH;
 
@@ -27,7 +27,7 @@ architecture structural of BFLY_CU_DATAPATH is
 	generic(
 		in_length: INTEGER:= 3;
 		next_Address_length :INTEGER := 4;
-		out_length: INTEGER:= 21
+		out_length: INTEGER:= 22
 	);
 	port (	A:	in	STD_LOGIC_VECTOR ((in_length-1) downto 0);
 		OUT_EVEN:	out	STD_LOGIC_VECTOR((out_length-1) downto 0);
@@ -61,15 +61,15 @@ architecture structural of BFLY_CU_DATAPATH is
 	
 	SIGNAL CC_mux_out : STD_LOGIC := '0';
 	
-	SIGNAL PLA_ROM_out_even, PLA_ROM_out_odd : STD_LOGIC_VECTOR (20 downto 0):= (others=>'0');
+	SIGNAL PLA_ROM_out_even, PLA_ROM_out_odd : STD_LOGIC_VECTOR (21 downto 0):= (others=>'0');
 	
-	SIGNAL PLA_ROM_mux_out : STD_LOGIC_VECTOR (20 downto 0):= (others=>'0');
+	SIGNAL PLA_ROM_mux_out : STD_LOGIC_VECTOR (21 downto 0):= (others=>'0');
 	
 	SIGNAL status_PLA_LSB_out : STD_LOGIC := '0';
 	SIGNAL status_PLA_CC_validation_out : STD_LOGIC := '0';
 
-	SIGNAL microIR_in : STD_LOGIC_VECTOR (20 downto 0)	:= (others=>'0');
-	SIGNAL microIR_out : STD_LOGIC_VECTOR (20 downto 0)	:= (others=>'0');
+	SIGNAL microIR_in : STD_LOGIC_VECTOR (21 downto 0)	:= (others=>'0');
+	SIGNAL microIR_out : STD_LOGIC_VECTOR (21 downto 0)	:= (others=>'0');
 
 	SIGNAL CC_validation : STD_LOGIC := '0';
 	SIGNAL next_Address_LSB : STD_LOGIC := '0';
@@ -82,7 +82,7 @@ architecture structural of BFLY_CU_DATAPATH is
 	dp_STATUS(0) <= START;
 	dp_STATUS(1) <= SF_2H_1L;
 
-	INSTRUCTION_OUT <= microIR_out (19 downto 4);
+	INSTRUCTION_OUT <= microIR_out(21) & microIR_out (19 downto 4);
 	CC_validation <= microIR_out (20);
 	next_Address_LSB <= microIR_out (0);
 	
@@ -139,7 +139,7 @@ architecture structural of BFLY_CU_DATAPATH is
 	--Registro del uIR
 	pm_microIR_reg : FD 
 	generic map (
-		bus_length => 21
+		bus_length => 22
 	)
 	port map (
 		D => microIR_in,
@@ -151,7 +151,7 @@ architecture structural of BFLY_CU_DATAPATH is
 	--MUX a due ingressi a 21 bit, che seleziona tra l'uscita pari o dispari della ROM
 	pm_ROM_mux : MUX_2 
 	generic map (
-		bus_length => 21
+		bus_length => 22
 	)
 	port map (
 		A => PLA_ROM_out_odd,
