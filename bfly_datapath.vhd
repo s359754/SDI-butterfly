@@ -4,18 +4,18 @@ use IEEE.std_logic_1164.all; --  libreria IEEE con definizione tipi standard log
 use IEEE.numeric_std.all;
 
 
-entity fmc_datapath is
+entity bfly_datapath is
 port( 
 	Br_in, Bi_in, Ar_in, Ai_in, Wr_in, Wi_in : in STD_LOGIC_VECTOR (23 downto 0);
 	Clock, START, SF_2H_1L : in STD_LOGIC;
 	Br_out, Bi_out, Ar_out, Ai_out : out STD_LOGIC_VECTOR (23 downto 0);
 	DONE : out STD_LOGIC
 );
-end	fmc_datapath;
+end	bfly_datapath;
 
 ---------------------------------------------
 
-architecture structural of fmc_datapath is
+architecture structural of bfly_datapath is
 	
 	--====================================================================================================---
 	--Inizializzazione componenti
@@ -62,7 +62,7 @@ architecture structural of fmc_datapath is
 	end component;
 	
 	--Flip Flop di tipo T con reset sincrono attivo alto
-	component FT is
+	component T_FF is
 	port (	T:	in	STD_LOGIC;
 		R: in STD_LOGIC;	--RESET attivo alto
 		CK:	in	STD_LOGIC;
@@ -217,6 +217,28 @@ architecture structural of fmc_datapath is
 			Q => dp_Ai_MUX_in
 	);
 	
+	pm_regin_Wr : FD
+		generic map (
+			bus_length => 24
+		)
+		port map (
+			D => Wr_in,
+			E => dp_REG_IN,
+			CK => Clock,
+			Q => dp_Wr_MUX_in
+	);
+	
+	pm_regin_Wi : FD
+		generic map (
+			bus_length => 24
+		)
+		port map (
+			D => Wi_in,
+			E => dp_REG_IN,
+			CK => Clock,
+			Q => dp_Wi_MUX_in
+	);
+	
 	--====================================================================================================---
 	--Port map dei Multiplexer a due ingressi
 	--====================================================================================================---
@@ -354,7 +376,7 @@ architecture structural of fmc_datapath is
 		DIFF_OUT => dp_DIFF_out
 	);
 		
-	pm_ft_shift : FT	--Port map del flip flop T che ha come uscita il segnale di SF_2H_1L per il blocco rounding
+	pm_ft_shift : T_FF	--Port map del flip flop T che ha come uscita il segnale di SF_2H_1L per il blocco rounding
 	port map (
 		T => dp_SHIFT_SIGNAL,	--Segnale che viene dalla CU
 		R => dp_DONE,			--Segnale che viene dalla CU

@@ -36,13 +36,11 @@ architecture behavioral of BFLY_CU_ROM is
 	OUT_ODD <= out_tmp_odd;
 
 
-	--Shift di 1 o 2 bit
-	out_tmp_even(21) <= SF_2H_1L_even;
-
 	--CC validation
-	out_tmp_even(20) <= CC_Validation_even;
+	out_tmp_even(21) <= CC_Validation_even;
 
 	--Instruction part
+	out_tmp_even(20) <= SF_2H_1L_even;
 	out_tmp_even(19) <= REG_IN_even;
 	out_tmp_even(18) <= SUM_REG_even;
 	out_tmp_even(17) <= AR_SEL_even;
@@ -64,13 +62,13 @@ architecture behavioral of BFLY_CU_ROM is
 	out_tmp_even(0) <= '0';
 
 
-	--Shift di 1 o 2 bit
-	out_tmp_odd(21) <= SF_2H_1L_odd;
+
 
 	--CC validation
-	out_tmp_odd(20) <= CC_Validation_odd;
+	out_tmp_odd(21) <= CC_Validation_odd;
 
 	--Instruction part
+	out_tmp_odd(20) <= SF_2H_1L_odd;
 	out_tmp_odd(19) <= REG_IN_odd;
 	out_tmp_odd(18) <= SUM_REG_odd;
 	out_tmp_odd(17) <= AR_SEL_odd;

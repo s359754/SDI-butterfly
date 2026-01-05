@@ -82,8 +82,8 @@ architecture structural of BFLY_CU_DATAPATH is
 	dp_STATUS(0) <= START;
 	dp_STATUS(1) <= SF_2H_1L;
 
-	INSTRUCTION_OUT <= microIR_out(21) & microIR_out (19 downto 4);
-	CC_validation <= microIR_out (20);
+	INSTRUCTION_OUT <= microIR_out (20 downto 4);
+	CC_validation <= microIR_out (21);
 	next_Address_LSB <= microIR_out (0);
 	
 	next_Address_MSB(2 downto 0) <= microIR_out (3 downto 1);
@@ -108,7 +108,7 @@ architecture structural of BFLY_CU_DATAPATH is
 	generic map(
 		in_length => 3,
 		next_Address_length => 3,
-		out_length => 21
+		out_length => 22
 	)
 	port map (	
 		A => microAR_out_MSB,
