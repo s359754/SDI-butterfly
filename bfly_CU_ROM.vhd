@@ -363,10 +363,10 @@ architecture behavioral of BFLY_CU_ROM is
 			MSD_DIFFm_even <= "00";
 			AS_SUM_SEL_even <= '0';
 			SD_ROUND_SEL_even <= '0';
-			REG_RND_BR_even <= '1';
+			REG_RND_BR_even <= '0';
 			REG_RND_BI_even <= '0';
 			REG_RND_AR_even <= '0';
-			REG_RND_AI_even <= '0';
+			REG_RND_AI_even <= '1';
 			SHIFT_even <= '0';
 			DONE_even <= '0';
 			next_Address_even <= "110";
@@ -383,10 +383,10 @@ architecture behavioral of BFLY_CU_ROM is
 			MSD_DIFFm_odd <= "00";
 			AS_SUM_SEL_odd <= '0';
 			SD_ROUND_SEL_odd <= '0';
-			REG_RND_BR_odd <= '0';
+			REG_RND_BR_odd <= '1';
 			REG_RND_BI_odd <= '0';
 			REG_RND_AR_odd <= '0';
-			REG_RND_AI_odd <= '1';
+			REG_RND_AI_odd <= '0';
 			SHIFT_odd <= '0';
 			DONE_odd <= '0';
 			next_Address_odd <= "111";
