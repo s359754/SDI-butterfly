@@ -18,12 +18,12 @@ architecture behavioral of BFLY_ADDER is
 	
 	begin
 	
-	sum <= std_logic_vector(signed(A)+signed(B)); 
+	SUM_OUT <= sum;
 
 		PSYNCH: process(CK)
 		begin
 			if CK'event and CK='1' then -- positive edge triggered:
-				SUM_OUT <= sum;
+			sum <= std_logic_vector(signed(A)+signed(B)); 
 			
 			end if;
 		end process;

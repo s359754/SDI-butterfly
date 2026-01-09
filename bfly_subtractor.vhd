@@ -18,12 +18,12 @@ architecture behavioral of BFLY_SUBTRACTOR is
 	
 	begin
 	
-	diff <= std_logic_vector(signed(A)-signed(B)); 
-
+	DIFF_OUT <= diff;
+	
 		PSYNCH: process(CK)
 		begin
 			if CK'event and CK='1' then -- positive edge triggered:
-				DIFF_OUT <= diff;
+				diff <= std_logic_vector(signed(A)-signed(B)); 
 			
 			end if;
 		end process;

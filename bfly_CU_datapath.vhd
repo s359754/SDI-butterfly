@@ -77,7 +77,11 @@ architecture structural of BFLY_CU_DATAPATH is
 	
 	SIGNAL dp_STATUS : STD_LOGIC_VECTOR (1 downto 0) := (others=>'0');
 	
+	SIGNAL neg_CK : STD_LOGIC := '0';
+	
 	begin
+	
+	neg_CK <= NOT(CK);
 
 	dp_STATUS(0) <= START;
 	dp_STATUS(1) <= SF_2H_1L;
@@ -144,7 +148,7 @@ architecture structural of BFLY_CU_DATAPATH is
 	port map (
 		D => microIR_in,
 		E => '1',
-		CK => CK,
+		CK => neg_CK,
 		Q => microIR_out
 	);
 

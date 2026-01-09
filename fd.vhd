@@ -22,7 +22,9 @@ begin
 	PSYNCH: process(CK)
 	begin
 		if CK'event and CK='1' then -- positive edge triggered:
-			q_temp <= D;
+			if E = '1' then
+				q_temp <= D;
+			end if;
 		end if;
 	end process;
 
