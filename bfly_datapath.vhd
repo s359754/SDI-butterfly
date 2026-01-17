@@ -288,8 +288,8 @@ architecture structural of bfly_datapath is
 	);
 	
 	--Ingresso 1 del multiplexer in entrata al sommatore, ovvero l'uscita del MUX di Ar/Ai
-	dp_AS_A_MUX_in (48 downto 24) <= (others => '0');	--Aggiungo zeri perché l'uscita del MUX di Ar/Ai è solo su 24 bit
-	dp_AS_A_MUX_in (23 downto 0) <= dp_A_MUX_out;
+	dp_AS_A_MUX_in (48 downto 25) <= dp_A_MUX_out;
+	dp_AS_A_MUX_in (24 downto 0) <= (others => '0');	--Aggiungo zeri perché l'uscita del MUX di Ar/Ai è solo su 24 bit
 	
 	pm_mux_Adder : MUX_2 	--Multiplexer dell'adder
 	generic map (

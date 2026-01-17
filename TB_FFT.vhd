@@ -1,0 +1,169 @@
+library IEEE;
+use IEEE.std_logic_1164.all;
+use IEEE.numeric_std.all;
+
+entity tb_fft is
+end	tb_fft;
+
+architecture behavioral of tb_fft is
+	
+component BFLY_TOP_ENTITY is
+	port(	
+		-- segnali reali ingresso
+		x0r_in, x1r_in, x2r_in, x3r_in, x4r_in, x5r_in, x6r_in, x7r_in:	in	STD_LOGIC_VECTOR (23 downto 0);
+		x8r_in, x9r_in, x10r_in, x11r_in, x12r_in, x13r_in, x14r_in, x15r_in:	in	STD_LOGIC_VECTOR (23 downto 0);
+		-- segnali immaginari ingresso
+		x0i_in, x1i_in, x2i_in, x3i_in, x4i_in, x5i_in, x6i_in, x7i_in:	in	STD_LOGIC_VECTOR (23 downto 0);
+		x8i_in, x9i_in, x10i_in, x11i_in, x12i_in, x13i_in, x14i_in, x15i_in:	in	STD_LOGIC_VECTOR (23 downto 0);
+		-- segnali reali uscita
+		x0r_out, x1r_out, x2r_out, x3r_out, x4r_out, x5r_out, x6r_out, x7r_out:	out	STD_LOGIC_VECTOR (23 downto 0);
+		x8r_out, x9r_out, x10r_out, x11r_out, x12r_out, x13r_out, x14r_out, x15r_out:	out	STD_LOGIC_VECTOR (23 downto 0);
+		-- segnali immaginari uscita
+		x0i_out, x1i_out, x2i_out, x3i_out, x4i_out, x5i_out, x6i_out, x7i_out:	out	STD_LOGIC_VECTOR (23 downto 0);
+		x8i_out, x9i_out, x10i_out, x11i_out, x12i_out, x13i_out, x14i_out, x15i_out:	out	STD_LOGIC_VECTOR (23 downto 0);
+		-- segnali di controllo
+		Clock: in STD_LOGIC;
+		START : in STD_LOGIC;
+		DONE : out STD_LOGIC
+		);
+end component;
+
+	constant period : time := 10 ns; --  clock da 100MHz
+	
+	signal TB_CLK: STD_LOGIC := '0';
+	signal TB_START: STD_LOGIC := '0';
+	signal TB_DONE: STD_LOGIC := '0';
+	type array_dati is array (0 to 15) of STD_LOGIC_VECTOR(23 downto 0);
+   signal r_in : array_dati := (others => (others => '0')); -- other più annidato mette tutto a 0, l'altro lo fa per tutte le posizioni
+   signal i_in : array_dati := (others => (others => '0'));
+   signal r_out : array_dati;
+   signal i_out : array_dati;
+	
+	begin
+	
+	TB_CLK <= not TB_CLK after period/2;
+	
+	DUT : BFLY_TOP_ENTITY port map (
+	-- assegnazione dei segnali di controllo
+		Clock => TB_CLK,
+		START => TB_START,
+		DONE  => TB_DONE,
+	-- assegnazione dei segnali ingresso reali
+		x0r_in => r_in(0),
+		x1r_in => r_in(1),
+		x2r_in => r_in(2),
+		x3r_in => r_in(3),
+		x4r_in => r_in(4),
+		x5r_in => r_in(5),
+		x6r_in => r_in(6),
+		x7r_in => r_in(7),
+		x8r_in => r_in(8),
+		x9r_in => r_in(9),
+		x10r_in => r_in(10),
+		x11r_in => r_in(11),
+		x12r_in => r_in(12),
+		x13r_in => r_in(13),
+		x14r_in => r_in(14),
+		x15r_in => r_in(15),
+	-- assegnazione dei segnali ingresso immaginari
+		x0i_in => i_in(0),
+		x1i_in => i_in(1),
+		x2i_in => i_in(2),
+		x3i_in => i_in(3),
+		x4i_in => i_in(4),
+		x5i_in => i_in(5),
+		x6i_in => i_in(6),
+		x7i_in => i_in(7),
+		x8i_in => i_in(8),
+		x9i_in => i_in(9),
+		x10i_in => i_in(10),
+		x11i_in => i_in(11),
+		x12i_in => i_in(12),
+		x13i_in => i_in(13),
+		x14i_in => i_in(14),
+		x15i_in => i_in(15),
+	-- assegnazione dei segnali d'uscita reali
+		x0r_out => r_out(0),
+		x1r_out => r_out(1),
+		x2r_out => r_out(2),
+		x3r_out => r_out(3),
+		x4r_out => r_out(4),
+		x5r_out => r_out(5),
+		x6r_out => r_out(6),
+		x7r_out => r_out(7),
+		x8r_out => r_out(8),
+		x9r_out => r_out(9),
+		x10r_out => r_out(10),
+		x11r_out => r_out(11),
+		x12r_out => r_out(12),
+		x13r_out => r_out(13),
+		x14r_out => r_out(14),
+		x15r_out => r_out(15),
+	-- assegnazione dei segnali d'uscita immaginari
+		x0i_out => i_out(0),
+		x1i_out => i_out(1),
+		x2i_out => i_out(2),
+		x3i_out => i_out(3),
+		x4i_out => i_out(4),
+		x5i_out => i_out(5),
+		x6i_out => i_out(6),
+		x7i_out => i_out(7),
+		x8i_out => i_out(8),
+		x9i_out => i_out(9),
+		x10i_out => i_out(10),
+		x11i_out => i_out(11),
+		x12i_out => i_out(12),
+		x13i_out => i_out(13),
+		x14i_out => i_out(14),
+		x15i_out => i_out(15)
+    );
+	 
+	test: process
+    begin
+	 TB_START <= '0';
+    wait for 20 ns; -- Aspetto 2 period prima di iniziare la simulazione
+	 
+	 ---------------------- TEST 1 ----------------------
+	 r_in(0) <= "011111111111111111111111";
+	 r_in(1) <= "000000000000000000000000";
+	 r_in(2) <= "000000000000000000000000";
+	 r_in(3) <= "000000000000000000000000";
+	 r_in(4) <= "000000000000000000000000";
+	 r_in(5) <= "000000000000000000000000";
+	 r_in(6) <= "000000000000000000000000";
+	 r_in(7) <= "000000000000000000000000";
+	 r_in(8) <= "000000000000000000000000";
+	 r_in(9) <= "000000000000000000000000";
+	 r_in(10) <= "000000000000000000000000";
+	 r_in(11) <= "000000000000000000000000";
+	 r_in(12) <= "000000000000000000000000";
+	 r_in(13) <= "000000000000000000000000";
+	 r_in(14) <= "000000000000000000000000";
+	 r_in(15) <= "000000000000000000000000";
+	 
+	 i_in(0) <= "000000000000000000000000";
+	 i_in(1) <= "000000000000000000000000";
+	 i_in(2) <= "000000000000000000000000";
+	 i_in(3) <= "000000000000000000000000";
+	 i_in(4) <= "000000000000000000000000";
+	 i_in(5) <= "000000000000000000000000";
+	 i_in(6) <= "000000000000000000000000";
+	 i_in(7) <= "000000000000000000000000";
+	 i_in(8) <= "000000000000000000000000";
+	 i_in(9) <= "000000000000000000000000";
+	 i_in(10) <= "000000000000000000000000";
+	 i_in(11) <= "000000000000000000000000";
+	 i_in(12) <= "000000000000000000000000";
+	 i_in(13) <= "000000000000000000000000";
+	 i_in(14) <= "000000000000000000000000";
+	 i_in(15) <= "000000000000000000000000";
+	 
+	 
+	 TB_START <= '1';
+    wait for 20 ns;
+    TB_START <= '0';
+	 wait;
+        
+    end process;
+
+end behavioral;
