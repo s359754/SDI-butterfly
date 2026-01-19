@@ -37,6 +37,14 @@ architecture behavioral of tb_multiplier is
 		TB_B <= "111111111111111111111111";
 		wait for period*1;
 		
+		TB_A <= "100000000000000000000001";
+		TB_B <= "100000000000000000000001";
+		wait for period*1;
+		
+		TB_A <= "111111111111111111111111";
+		TB_B <= "111111111111111111111111";
+		wait for period*1;
+		
 		TB_A <= "000000000000000000000011";
 		TB_B <= "111111111111111111111101";
 		wait for period*1;
