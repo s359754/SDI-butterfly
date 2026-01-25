@@ -291,11 +291,7 @@ architecture structural of bfly_datapath is
 	
 	dp_AS_A_MUX_in (48 downto 23) <= dp_A_MUX_out(23) & dp_A_MUX_out(23) & dp_A_MUX_out;
 	dp_AS_A_MUX_in (22 downto 0) <= (others => '0');	--Aggiungo zeri perché l'uscita del MUX di Ar/Ai è solo su 24 bit
-	
-	
---	dp_AS_A_MUX_in (48 downto 25) <= dp_A_MUX_out;
---	dp_AS_A_MUX_in (24 downto 0) <= (others => '0');	--Aggiungo zeri perché l'uscita del MUX di Ar/Ai è solo su 24 bit
-	
+		
 	pm_mux_Adder : MUX_2 	--Multiplexer dell'adder
 	generic map (
 		bus_length => 49

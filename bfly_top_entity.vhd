@@ -405,10 +405,10 @@ architecture structural of BFLY_TOP_ENTITY is
 	);
 	
 	pm_bfly3b_4 : bfly_datapath port map (
-		Br_in => Br_out1(21),
-		Bi_in => Bi_out1(21), 
-		Ar_in => Ar_out1(21), 
-		Ai_in => Ai_out1(21), 
+		Br_in => Br_out1(23),
+		Bi_in => Bi_out1(23), 
+		Ar_in => Ar_out1(23), 
+		Ai_in => Ai_out1(23), 
 		Wr_in => W_r(6), 
 		Wi_in => W_i(6),
 		Clock => Clock, 
