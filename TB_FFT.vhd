@@ -181,7 +181,7 @@ end component;
     wait for 2*period;
     TB_START <= '0';
 	
-	wait for 50*period;
+	wait for 11*period;
 	TB_START <= '1';
 			
 	---------------------- TEST 2 ---------------------- -1 0 1 0 -1 0 1 0 -1 0 1 0 -1 0 1 0	
@@ -222,7 +222,7 @@ end component;
 	 wait for 1*period;
 	 TB_START <= '0';
 
-	wait for 51*period;
+	wait for 12*period;
 	TB_START <= '1';
 			
 		---------------------- TEST 3 ----------------------	1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0
@@ -263,7 +263,7 @@ end component;
 	 wait for 1*period;
 	 TB_START <= '0';
 	
-	wait for 51*period;
+	wait for 12*period;
 	TB_START <= '1';
 			
 	 ---------------------- TEST 4 ---------------------- -1 -1 1 1 -1 -1 1 1 -1 -1 1 1 -1 -1 1 1 
@@ -305,7 +305,7 @@ end component;
 	 TB_START <= '0';
 
 
-	wait for 51*period;
+	wait for 12*period;
 	TB_START <= '1';
 			
 	 ---------------------- TEST 5 ---------------------- 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 -0.5 -0.5 -0.5 -0.5 -0.5 -0.5 -0.5
@@ -346,7 +346,7 @@ end component;
 	 wait for 1*period;
 	 TB_START <= '0';
 
-	wait for 51*period;
+	wait for 12*period;
 	TB_START <= '1';
 			
 	---------------------- TEST 6 ---------------------- 0 0 0 0 0 0 0 0 0.75 0 0 0 0 0 0 0
@@ -387,7 +387,7 @@ end component;
 	 wait for 1*period;
 	 TB_START <= '0';
 	 
-	 wait for 51*period;
+	 wait for 12*period;
 	TB_START <= '1';
 			
 	 ---------------------- TEST 7 ---------------------- 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5 0.5
